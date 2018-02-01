@@ -20,7 +20,7 @@ module.exports = mesh
 var DEFAULT_HOST = (module.exports.DEFAULT_HOST = '127.0.0.1')
 var DEFAULT_PORT = (module.exports.DEFAULT_PORT = 39999)
 
-var intern = module.exports.intern = make_intern()
+var intern = (module.exports.intern = make_intern())
 
 var optioner = Optioner({
   pin: Joi.alternatives().try(Joi.string(), Joi.object()),
@@ -81,7 +81,12 @@ var optioner = Optioner({
   },
 
   monitor: false,
-  sneeze: null
+  sneeze: null,
+
+  routes: Joi.array(),
+
+  onAddClient: Joi.func(),
+  onRemoveClient: Joi.func()
 })
 
 function mesh(options) {
@@ -122,7 +127,7 @@ function mesh(options) {
     var tag = options.tag
 
     var listen = options.listen || [
-      { pin: pin, model: options.model || 'consume' }
+      { pin: pin, model: options.model || 'consume', routes: options.routes }
     ]
 
     var balance_client_opts = options.balance_client || {}
@@ -159,11 +164,13 @@ function mesh(options) {
         sneeze_opts.tag = void 0 !== sneeze_opts.tag
           ? sneeze_opts.tag
           : void 0 !== tag
-              ? null === tag ? null : 'seneca~' + tag
-              : 'seneca~mesh'
+            ? null === tag ? null : 'seneca~' + tag
+            : 'seneca~mesh'
 
-        seneca.add('role:transport,cmd:listen', 
-                   intern.make_transport_listen(options, join, listen, init_done))
+        seneca.add(
+          'role:transport,cmd:listen',
+          intern.make_transport_listen(options, join, listen, init_done)
+        )
 
         // call seneca.listen as a convenience
         // subsequent seneca.listen calls will still publish to network
@@ -191,10 +198,9 @@ function mesh(options) {
           })
         }
 
-
         function join(instance, raw_config, done) {
           var client_instance = instance.root.delegate()
-          var config = seneca.util.clean(raw_config || {}, {proto:false})
+          var config = seneca.util.clean(raw_config || {}, { proto: false })
 
           if (!config.pin && !config.pins) {
             config.pin = 'null:true'
@@ -220,6 +226,12 @@ function mesh(options) {
           sneeze.on('add', add_client)
           sneeze.on('remove', remove_client)
           sneeze.on('ready', done)
+          if (options.onAddClient) {
+            sneeze.on('add', options.onAddClient)
+          }
+          if (options.onRemoveClient) {
+            sneeze.on('remove', options.onRemoveClient)
+          }
 
           seneca.add('role:seneca,cmd:close', function(msg, done) {
             closed = true
@@ -248,7 +260,6 @@ function mesh(options) {
             })
           })
 
-
           sneeze.join(meta)
 
           function add_client(meta) {
@@ -271,9 +282,8 @@ function mesh(options) {
               )
 
               var has_balance_client = !!balance_map[pin_config.pin]
-              var target_map = (balance_map[pin_config.pin] = balance_map[
-                pin_config.pin
-              ] || {})
+              var target_map = (balance_map[pin_config.pin] =
+                balance_map[pin_config.pin] || {})
 
               // this is a duplicate, so ignore
               if (target_map[pin_config.id]) {
@@ -289,7 +299,6 @@ function mesh(options) {
               }
 
               target_map[pin_config.id] = true
-
 
               if (!has_balance_client) {
                 // no balancer for this pin, so add one
@@ -313,7 +322,7 @@ function mesh(options) {
             if (client_instance.id === meta.instance) {
               return
             }
-            
+
             var config = meta.config || {}
             var pins = intern.resolve_pins(client_instance, config)
 
@@ -332,7 +341,8 @@ function mesh(options) {
               }
 
               client_instance.act('role:transport,type:balance,remove:client', {
-                config: pin_config, meta:meta
+                config: pin_config,
+                meta: meta
               })
             })
           }
@@ -342,10 +352,9 @@ function mesh(options) {
   })
 }
 
-
 function make_intern() {
   return {
-    make_transport_listen: function (options, join, listen, init_done) {
+    make_transport_listen: function(options, join, listen, init_done) {
       var listen_count = 0
       var last_mesh_listen_err = null
 
@@ -370,9 +379,9 @@ function make_intern() {
 
               // only finish mesh plugin init if all auto listens attempted
               if (listen.length === listen_count) {
-                setTimeout(function(){
+                setTimeout(function() {
                   init_done(last_mesh_listen_err)
-                },options.jointime)
+                }, options.jointime)
               }
             })
           } else {
@@ -443,9 +452,8 @@ function make_intern() {
 
     addbase_funcmap: {
       defined: function(seneca, options, bases, next) {
-        var add = (options.sneeze || {}).bases ||
-              options.bases ||
-              options.remotes || []
+        var add =
+          (options.sneeze || {}).bases || options.bases || options.remotes || []
 
         add = add.filter(function(base) {
           return base && 0 < base.length
@@ -522,7 +530,7 @@ function make_intern() {
         var first = true
 
         var base_addr =
-              (options.host || DEFAULT_HOST) + ':' + (options.port || DEFAULT_PORT)
+          (options.host || DEFAULT_HOST) + ':' + (options.port || DEFAULT_PORT)
 
         if (options.isbase) {
           var ri = options.discover.registry.refresh_interval
@@ -551,8 +559,8 @@ function make_intern() {
 
               if (options.isbase) {
                 var prune_first =
-                      Math.random() <
-                      options.discover.registry.prune_first_probability
+                  Math.random() <
+                  options.discover.registry.prune_first_probability
 
                 if (prune_first || -1 === add.indexOf(base_addr)) {
                   add.push(base_addr)
@@ -560,7 +568,7 @@ function make_intern() {
 
                   if (
                     prune_first &&
-                      options.discover.registry.prune_bound < add.length
+                    options.discover.registry.prune_bound < add.length
                   ) {
                     add.shift()
                   }
