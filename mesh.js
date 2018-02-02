@@ -83,10 +83,7 @@ var optioner = Optioner({
   monitor: false,
   sneeze: null,
 
-  routes: Joi.array(),
-
-  onAddClient: Joi.func(),
-  onRemoveClient: Joi.func()
+  nodeMetadata: Joi.object()
 })
 
 function mesh(options) {
@@ -127,7 +124,11 @@ function mesh(options) {
     var tag = options.tag
 
     var listen = options.listen || [
-      { pin: pin, model: options.model || 'consume', routes: options.routes }
+      {
+        pin: pin,
+        model: options.model || 'consume',
+        nodeMetadata: options.nodeMetadata
+      }
     ]
 
     var balance_client_opts = options.balance_client || {}
@@ -226,12 +227,6 @@ function mesh(options) {
           sneeze.on('add', add_client)
           sneeze.on('remove', remove_client)
           sneeze.on('ready', done)
-          if (options.onAddClient) {
-            sneeze.on('add', options.onAddClient)
-          }
-          if (options.onRemoveClient) {
-            sneeze.on('remove', options.onRemoveClient)
-          }
 
           seneca.add('role:seneca,cmd:close', function(msg, done) {
             closed = true
