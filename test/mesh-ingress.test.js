@@ -29,14 +29,18 @@ var test_discover = {
   registry: { active: false }
 }
 
-describe('mesh routing', function() {
+describe('mesh ingress', function() {
   it(
-    'accepts route configuration',
+    'accepts ingress configuration',
     { parallel: false, timeout: 5555 },
     function(fin) {
       const b0 = Seneca({ tag: 'b0', legacy: { transport: false } })
         .test(fin)
-        .use('../mesh', { base: true, discover: test_discover, onAddClient })
+        .use('../mesh', { base: true, discover: test_discover })
+        .use('../ingress')
+        .add('role:ingress,cmd:add', function(msg) {
+          s0.close(b0.close.bind(b0, setTimeout.bind(this, fin, 555)))
+        })
 
       const s0 = Seneca({ tag: 's0', legacy: { transport: false } })
         .test(fin)
@@ -48,9 +52,15 @@ describe('mesh routing', function() {
         s0.use('../mesh', {
           pin: 'a:1',
           discover: test_discover,
-          routes: [
-            { path: '/test', method: 'POST', pattern: 'cmd:test,val:{qsValue}' }
-          ]
+          nodeMetadata: {
+            ingress: [
+              {
+                path: '/test',
+                method: 'POST',
+                pattern: 'cmd:test,val:{qsValue}'
+              }
+            ]
+          }
         })
       })
 
