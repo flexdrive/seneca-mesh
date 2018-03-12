@@ -128,9 +128,7 @@ function mesh(options) {
     var listen = opts.listen || [
       {
         pin: pin,
-        model: opts.model || 'consume',
-        routes: opts.routes,
-        nodeMetadata: opts.nodeMetadata
+        model: opts.model || 'consume'
       }
     ]
 
@@ -306,6 +304,8 @@ function mesh(options) {
                   model: config.model
                 })
               }
+
+              pin_config.nodeMetadata = options.nodeMetadata
 
               client_instance.act('role:transport,type:balance,add:client', {
                 config: pin_config
