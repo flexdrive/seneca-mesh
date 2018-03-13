@@ -1,17 +1,18 @@
 {
-  "name": "seneca-mesh",
-  "version": "0.12.0",
+  "name": "@flexdrive/seneca-mesh",
+  "version": "0.1.1",
   "description": "Mesh your Seneca.js microservices together - no more service discovery!",
   "main": "mesh.js",
   "license": "MIT",
-  "author": "Richard Rodger (http://richardrodger.com)",
+  "author": "Daniel O'Neill",
   "contributors": [
     "Richard Rodger (http://richardrodger.com)",
     "Emer Rutherford (https://github.com/eeswr)",
     "jaamison (https://github.com/jaamison)",
     "Dean McDonnell (https://github.com/mcdonnelldean)",
     "Shane Lacey (https://github.com/shanel262)",
-    "Mihai Dima (https://github.com/mihaidma)"
+    "Mihai Dima (https://github.com/mihaidma)",
+    "Daniel O'Neill (https://github.com/byudaniel)"
   ],
   "scripts": {
     "test": "lab test/*.test.js -r console -L -t 80 -c -v",
