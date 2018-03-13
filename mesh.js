@@ -215,6 +215,8 @@ function mesh(options) {
 
           sneeze = Sneeze(instance_sneeze_opts)
 
+          config.nodeMetadata = options.nodeMetadata
+
           var meta = {
             config: seneca.util.clean(config),
             instance: instance.id
@@ -304,8 +306,6 @@ function mesh(options) {
                   model: config.model
                 })
               }
-
-              pin_config.nodeMetadata = options.nodeMetadata
 
               client_instance.act('role:transport,type:balance,add:client', {
                 config: pin_config
