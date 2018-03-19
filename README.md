@@ -417,6 +417,7 @@ The options are:
       * _active_: activate this discovery strategy. Default: true
 
   * kubernetes: Allows hosts
+    * Namespace: Namespace for the Kubernetes service
     * serviceName: Name of the Kubernetes service clients of the current service will connect through
     * serviceHost: Host for Kubernetes service
     * servicePort: Port for Kubernetes service
