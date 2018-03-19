@@ -1,23 +1,30 @@
 const k8s = require('@kubernetes/client-node')
 
-const k8sApi = k8s.Config.defaultClient()
+function KubernetesApi(k8sApi) {
+  async function getService(serviceName, namespace) {
+    const serviceResponse = await k8sApi.readNamespacedService(
+      serviceName,
+      namespace
+    )
+    return serviceResponse.body
+  }
 
-async function getService(serviceName, namespace) {
-  const serviceResponse = await k8sApi.readNamespacedService(
-    serviceName,
-    namespace
-  )
-  return serviceResponse.body
-}
+  async function serviceExists(serviceName, namespace) {
+    try {
+      await getService(serviceName, namespace)
+    } catch (err) {
+      return false
+    }
+  }
 
-async function serviceExists(serviceName, namespace) {
-  try {
-    await getService(serviceName, namespace)
-  } catch (err) {
-    return false
+  return {
+    serviceExists
   }
 }
 
-module.exports = {
-  serviceExists
+function createKubernetesApi() {
+  const k8sApi = k8s.Config.defaultClient()
+  return new KubernetesApi(k8sApi)
 }
+
+module.exports = createKubernetesApi

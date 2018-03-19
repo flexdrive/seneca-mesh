@@ -12,7 +12,7 @@ var Rif = require('rif')
 var Discover = require('node-discover')
 var Ip = require('ip')
 var Optioner = require('optioner')
-const { serviceExists } = require('./kubernetes-api')
+const KubernetesApi = require('./kubernetes-api')
 
 var Joi = Optioner.Joi
 
@@ -105,6 +105,11 @@ function mesh(options) {
 
   optioner(options, function(err, options) {
     if (err) throw err
+
+    let kubernetesApi
+    if (useKubernetesService()) {
+      kubernetesApi = KubernetesApi()
+    }
 
     var closed = false
 
@@ -339,7 +344,7 @@ function mesh(options) {
 
             if (useKubernetesService()) {
               // Check that there is a service and other pods with this host name
-              const otherPodsExist = await serviceExists(
+              const otherPodsExist = await kubernetesApi.serviceExists(
                 meta.serviceName,
                 options.kubernetes.namespace
               )
@@ -378,7 +383,7 @@ function mesh(options) {
   })
 
   function useKubernetesService() {
-    return !!options.kubernetes.serviceHost
+    return options.kubernetes && options.kubernetes.serviceHost
   }
 }
 
