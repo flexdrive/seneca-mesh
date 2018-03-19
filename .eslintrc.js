@@ -3,8 +3,8 @@ module.exports = {
   env: {
     node: true
   },
-  "parserOptions": {
-    "ecmaVersion": 6
+  parserOptions: {
+    ecmaVersion: 2017
   },
   rules: {
     'no-console': 0

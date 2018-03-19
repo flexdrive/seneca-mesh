@@ -9,6 +9,7 @@ var Rif = require('rif')
 var Discover = require('node-discover')
 var Ip = require('ip')
 var Optioner = require('optioner')
+const { serviceExists } = require('./kubernetes-api')
 
 var Joi = Optioner.Joi
 
@@ -16,6 +17,7 @@ module.exports = mesh
 
 var DEFAULT_HOST = (module.exports.DEFAULT_HOST = '127.0.0.1')
 var DEFAULT_PORT = (module.exports.DEFAULT_PORT = 39999)
+const DEFAULT_K8s_SERVICE_PORT = 29999
 
 var intern = (module.exports.intern = make_intern())
 
@@ -84,7 +86,17 @@ var optioner = Optioner({
   monitor: false,
   sneeze: null,
 
-  nodeMetadata: Joi.object()
+  nodeMetadata: Joi.object(),
+  kubernetes: {
+    namespace: Joi.string(),
+    serviceName: Joi.string(),
+    serviceHost: Joi.string(),
+    servicePort: Joi.number()
+      .integer()
+      .min(0)
+      .max(65535)
+      .default(DEFAULT_K8s_SERVICE_PORT)
+  }
 })
 
 
@@ -277,6 +289,12 @@ function mesh(options) {
                 config
               )
 
+              if (useKubernetesService()) {
+                pin_config.serviceName = options.kubernetes.serviceName
+                pin_config.host = options.kubernetes.serviceHost
+                pin_config.port = options.kubernetes.servicePort
+              }
+
               var has_balance_client = !!balance_map[pin_config.pin]
               var target_map = (balance_map[pin_config.pin] =
                 balance_map[pin_config.pin] || {})
@@ -313,12 +331,24 @@ function mesh(options) {
             })
           }
 
-          function remove_client(meta) {
+          async function remove_client(meta) {
             if (closed) return
 
             // ignore myself
             if (client_instance.id === meta.instance) {
               return
+            }
+
+            if (useKubernetesService()) {
+              // Check that there is a service and other pods with this host name
+              const otherPodsExist = await serviceExists(
+                meta.serviceName,
+                options.kubernetes.namespace
+              )
+
+              if (otherPodsExist) {
+                return
+              }
             }
 
             var config = meta.config || {}
@@ -347,6 +377,11 @@ function mesh(options) {
         }
       })
     }
+  })
+
+  function useKubernetesService() {
+    return !!opts.kubernetes.serviceHost
+  }
 }
 
 
