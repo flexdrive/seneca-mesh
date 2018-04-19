@@ -11,7 +11,8 @@ function KubernetesApi(k8sApi) {
 
   async function serviceExists(serviceName, namespace) {
     try {
-      await getService(serviceName, namespace)
+      return true
+      //await getService(serviceName, namespace)
     } catch (err) {
       return false
     }
@@ -23,7 +24,7 @@ function KubernetesApi(k8sApi) {
 }
 
 function createKubernetesApi() {
-  const k8sApi = k8s.Config.defaultClient()
+  const k8sApi = null // k8s.Config.defaultClient()
   return new KubernetesApi(k8sApi)
 }
 

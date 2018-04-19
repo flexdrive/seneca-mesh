@@ -36,7 +36,7 @@ var test_discover = {
 
 describe('#mesh', function () {
 
-  it('nextgen-single-with-base', {parallel: false, timeout: 5555}, function (fin) {
+  it.only('nextgen-single-with-base', {parallel: false, timeout: 5555}, function (fin) {
     var b0 = Seneca({tag: 'b0', legacy: { transport: false }})
         .test(fin)
         .use('..', {base: true, discover: test_discover})
@@ -47,7 +47,7 @@ describe('#mesh', function () {
 
     b0.ready(function () {
       s0
-        .use('..', {pin: 'a:1', discover: test_discover})
+        .use('..', {pin: 'a:1', discover: test_discover, kubernetes: { namespace: 'hi', serviceName: 'yo', serviceHost: 'hey', servicePort: 9999}})
         .ready(function () {
 
           b0.act('a:1,x:0', function (ignore, out) {

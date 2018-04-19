@@ -12,7 +12,7 @@ var Rif = require('rif')
 var Discover = require('node-discover')
 var Ip = require('ip')
 var Optioner = require('optioner')
-const KubernetesApi = require('./kubernetes-api')
+const KubernetesApi = require('./src/kubernetes-api')
 
 var Joi = Optioner.Joi
 
@@ -201,11 +201,15 @@ function mesh(options) {
               listen_opts.host = rif(listen_opts.host.substring(1))
             }
 
-            listen_opts.port = null != listen_opts.port
-              ? listen_opts.port
-              : function() {
-                  return 50000 + Math.floor(10000 * Math.random())
-                }
+            if (useKubernetesService()) {
+              listen_opts.port = options.kubernetes.servicePort
+            } else {
+              listen_opts.port = null != listen_opts.port
+                ? listen_opts.port
+                : function() {
+                    return 50000 + Math.floor(10000 * Math.random())
+                  }
+            }
 
             listen_opts.model = listen_opts.model || 'consume'
 
@@ -273,6 +277,12 @@ function mesh(options) {
             })
           })
 
+          if (useKubernetesService()) {
+            meta.config.host = options.kubernetes.serviceHost
+            meta.config.port = options.kubernetes.servicePort
+            meta.config.kubernetesServiceName = options.kubernetes.serviceName
+          }
+
           sneeze.join(meta)
 
           function add_client(meta) {
@@ -293,12 +303,6 @@ function mesh(options) {
                 pin,
                 config
               )
-
-              if (useKubernetesService()) {
-                pin_config.serviceName = options.kubernetes.serviceName
-                pin_config.host = options.kubernetes.serviceHost
-                pin_config.port = options.kubernetes.servicePort
-              }
 
               var has_balance_client = !!balance_map[pin_config.pin]
               var target_map = (balance_map[pin_config.pin] =
@@ -345,7 +349,7 @@ function mesh(options) {
             if (useKubernetesService()) {
               // Check that there is a service and other pods with this host name
               const otherPodsExist = await kubernetesApi.serviceExists(
-                meta.serviceName,
+                meta.kubernetesServiceName,
                 options.kubernetes.namespace
               )
 
