@@ -1,6 +1,6 @@
 {
   "name": "@flexdrive/seneca-mesh",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Mesh your Seneca.js microservices together - no more service discovery!",
   "main": "mesh.js",
   "license": "MIT",
@@ -63,6 +63,7 @@
   "files": [
     "README.md",
     "LICENSE",
-    "mesh.js"
+    "mesh.js",
+    "src"
   ]
 }
