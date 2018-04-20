@@ -9,7 +9,7 @@ var Rif = require('rif')
 var Discover = require('node-discover')
 var Ip = require('ip')
 var Optioner = require('optioner')
-const KubernetesApi = require('./src/kubernetes-api')
+const { getPods } = require('@flexdrive/kubernetes-api-helper')
 
 var Joi = Optioner.Joi
 
@@ -18,6 +18,7 @@ module.exports = mesh
 var DEFAULT_HOST = (module.exports.DEFAULT_HOST = '127.0.0.1')
 var DEFAULT_PORT = (module.exports.DEFAULT_PORT = 39999)
 const DEFAULT_K8s_SERVICE_PORT = 29999
+let joinCount = 0
 
 var intern = (module.exports.intern = make_intern())
 
@@ -89,7 +90,7 @@ var optioner = Optioner({
   nodeMetadata: Joi.object(),
   kubernetes: {
     namespace: Joi.string(),
-    serviceName: Joi.string(),
+    podLabel: Joi.string(),
     serviceHost: Joi.string(),
     servicePort: Joi.number()
       .integer()
@@ -106,11 +107,6 @@ function mesh(options) {
   seneca.depends('balance-client')
 
   var opts = optioner.check(options)
-
-    let kubernetesApi
-    if (useKubernetesService()) {
-      kubernetesApi = KubernetesApi()
-    }
 
     var closed = false
 
@@ -192,7 +188,7 @@ function mesh(options) {
         // call seneca.listen as a convenience
         // subsequent seneca.listen calls will still publish to network
         if (opts.auto) {
-          _.each(listen, function(listen_opts) {
+          _.each(listen, function(listen_opts, index) {
             if (opts.host && null == listen_opts.host) {
               listen_opts.host = opts.host
             }
@@ -202,7 +198,7 @@ function mesh(options) {
             }
 
             if (useKubernetesService()) {
-              listen_opts.port = options.kubernetes.servicePort
+              listen_opts.port = options.kubernetes.servicePort + index
             } else {
               listen_opts.port = null != listen_opts.port
                 ? listen_opts.port
@@ -233,6 +229,9 @@ function mesh(options) {
           var instance_sneeze_opts = _.clone(sneeze_opts)
           instance_sneeze_opts.identifier =
             sneeze_opts.identifier + '~' + config.pin + '~' + Date.now()
+
+          joinCount += 1
+          instance_sneeze_opts.port = instance_sneeze_opts.port - joinCount
 
           sneeze = Sneeze(instance_sneeze_opts)
 
@@ -280,7 +279,7 @@ function mesh(options) {
           if (useKubernetesService()) {
             meta.config.host = options.kubernetes.serviceHost
             meta.config.port = options.kubernetes.servicePort
-            meta.config.kubernetesServiceName = options.kubernetes.serviceName
+            meta.config.podLabel = options.kubernetes.podLabel
           }
 
           sneeze.join(meta)
@@ -350,10 +349,11 @@ function mesh(options) {
 
             if (useKubernetesService()) {
               // Check that there is a service and other pods with this host name
-              const otherPodsExist = await kubernetesApi.serviceExists(
-                meta.kubernetesServiceName,
-                options.kubernetes.namespace
-              )
+              const otherPodsExist =
+                (await getPods(options.kubernetes.namespace, {
+                  label: meta.podLabel,
+                  limit: 1
+                })).length > 0
 
               if (otherPodsExist) {
                 return
