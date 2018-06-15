@@ -386,7 +386,6 @@ function mesh(options) {
         }
       })
     }
-  })
 
   function useKubernetesService() {
     return opts.kubernetes && opts.kubernetes.serviceHost
