@@ -45,7 +45,7 @@ describe('#mesh', function () {
 
     b0.ready(function () {
       s0
-        .use(Mesh, {pin: 'a:1', discover: test_discover, kubernetes: { namespace: 'hi', serviceName: 'yo', serviceHost: 'hey', servicePort: 9999}})
+        .use(Mesh, {pin: 'a:1', discover: test_discover, kubernetes: { namespace: 'hi', serviceHost: 'hey', servicePort: 9999}})
         .ready(function () {
 
           b0.act('a:1,x:0', function (ignore, out) {
