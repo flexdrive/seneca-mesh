@@ -18,7 +18,6 @@ module.exports = mesh
 var DEFAULT_HOST = (module.exports.DEFAULT_HOST = '127.0.0.1')
 var DEFAULT_PORT = (module.exports.DEFAULT_PORT = 39999)
 const DEFAULT_K8s_SERVICE_PORT = 29999
-let joinCount = 0
 
 var intern = (module.exports.intern = make_intern())
 
@@ -239,9 +238,6 @@ function mesh(options) {
         var instance_sneeze_opts = _.clone(sneeze_opts)
         instance_sneeze_opts.identifier =
           sneeze_opts.identifier + '~' + config.pin + '~' + Date.now()
-
-        joinCount += 1
-        instance_sneeze_opts.port = instance_sneeze_opts.port - joinCount
 
         sneeze = Sneeze(instance_sneeze_opts)
 
