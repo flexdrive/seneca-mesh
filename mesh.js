@@ -10,7 +10,7 @@ var Discover = require('node-discover')
 var Ip = require('ip')
 var Optioner = require('optioner')
 const { getPods } = require('@flexdrive/kubernetes-api-helper')
-let hasJoinedMesh = false
+// let hasJoinedMesh = false
 
 var Joi = Optioner.Joi
 
@@ -240,10 +240,10 @@ function mesh(options) {
         instance_sneeze_opts.identifier =
           sneeze_opts.identifier + '~' + config.pin + '~' + Date.now()
 
-        if (!hasJoinedMesh) {
-          hasJoinedMesh = true
-          instance_sneeze_opts.port = 50000 + Math.floor(10000 * Math.random())
-        }
+        // if (!hasJoinedMesh) {
+        //   hasJoinedMesh = true
+        //   instance_sneeze_opts.port = 50000 + Math.floor(10000 * Math.random())
+        // }
 
         sneeze = Sneeze(instance_sneeze_opts)
 
