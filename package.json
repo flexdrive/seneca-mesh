@@ -37,7 +37,7 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
-    "@flexdrive/kubernetes-api-helper": "^0.1.13",
+    "@flexdrive/kubernetes-api-helper": "^0.2.2",
     "ip": "1.1",
     "jsonic": "0.3",
     "lodash": "4.17",
